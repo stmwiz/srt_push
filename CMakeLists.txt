@@ -71,7 +71,8 @@ file(GLOB_RECURSE NATIVE_SOURCES ./native/*.cpp)
 add_library(
     ${PROJECT_NAME} SHARED
     ${NATIVE_SOURCES}
-)
+
+    )
 
 # add_dynamic_lib(libsrt)
 # add_static_lib(libsrt)
@@ -79,11 +80,13 @@ add_library(
 # add_static_lib(libcrypto)
 # find_library(EGL-lib EGL)
 
+find_library(PTHREAD-LIB pthread)
+
 add_static_lib_source(sigslot)
 
 target_link_libraries(
         ${PROJECT_NAME}
-        
+        ${PTHREAD-LIB}
         libsigslot
         
 )

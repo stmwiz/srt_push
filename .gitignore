@@ -1,5 +1,4 @@
 !.gitignore
 build/
 libs/sources/output/
-.vscode/
 */.gitkeep
