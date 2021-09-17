@@ -1,6 +1,9 @@
 #pragma once
 
 #include <string>
+
+#include "base/packet.hpp"
+
 namespace xlab
 {
     class IPush
@@ -9,13 +12,6 @@ namespace xlab
         IPush(){};
         virtual ~IPush(){};
 
-        virtual void write(const char *url,
-                           const uint8_t *head,
-                           const int headLen,
-                           const uint8_t *body,
-                           const int bodyLen,
-                           const int64_t dts,
-                           const bool isVideo,
-                           const bool isKeyFrame) = 0;
+        virtual void write(const base::Packet &pkt) = 0;
     };
 }

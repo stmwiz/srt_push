@@ -3,10 +3,12 @@
 #include <string>
 namespace xlab
 {
-    class ICallBack
+    class IPushEvent
     {
-        ICallBack() {}
-        virtual ~ICallBack() {}
+    public:
+        IPushEvent() {}
+
+        virtual ~IPushEvent() {}
 
         virtual void OnConnected() = 0;
 
