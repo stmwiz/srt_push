@@ -1,6 +1,7 @@
 //
 // Created by x on 2021/8/20.
 //
+#pragma once
 
 #include <vector>
 
