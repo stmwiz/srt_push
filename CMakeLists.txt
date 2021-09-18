@@ -3,8 +3,12 @@ project(pusher)
 
 ENABLE_LANGUAGE(ASM)
 
+if(UNIX)
 set(PLATFORM linux)
 set(ABI x64)
+elseif(APPLE)
+elseif(WIN32)
+endif(UNIX)
 
 set(LIBS_DIR ${CMAKE_SOURCE_DIR}/libs/)
 set(LIBS_OS_DIR ${LIBS_DIR}/${PLATFORM}/${ABI}/) 
@@ -59,6 +63,21 @@ macro(include_directory DIR_PATH)
     message("Include Directory: ${DIR_PATH}")
 endmacro()
 
+macro(target_link_add_static_lib_source SOURCE_DIR)
+add_static_lib_source(${SOURCE_DIR})
+target_link_libraries(${PROJECT_NAME} lib${SOURCE_DIR})
+endmacro()
+
+macro(target_link_add_dynamic_lib_source SOURCE_DIR)
+add_static_lib_source(${SOURCE_DIR})
+target_link_libraries(${PROJECT_NAME} lib${SOURCE_DIR})
+endmacro()
+
+macro(target_link_add_executable EXE_NAME SOURCE_PATH)
+add_executable(${EXE_NAME}  ${SOURCE_PATH})
+target_link_libraries(${EXE_NAME} PRIVATE ${PROJECT_NAME})
+endmacro()
+
 set(NATIVE_DIR ${CMAKE_SOURCE_DIR}/native/) 
 
 include_directory(${CMAKE_SOURCE_DIR})
@@ -82,16 +101,18 @@ add_library(
 # add_static_lib(libcrypto)
 # find_library(EGL-lib EGL)
 
-find_library(PTHREAD-LIB pthread)
+if(NOT WIN32)
+    find_library(PTHREAD-LIB pthread)
+    target_link_libraries(${PROJECT_NAME} ${PTHREAD-LIB}) # linux
+endif()
 
-add_static_lib_source(sigslot)
+target_link_add_static_lib_source(sigslot)
 
-target_link_libraries(
-        ${PROJECT_NAME}
-        ${PTHREAD-LIB}
-        libsigslot
-        
-)
+if(ANDROID)
+    target_link_add_static_lib_source(jmi)
+    target_link_libraries(${PROJECT_NAME}  PRIVATE -landroid -llog)
+endif()
 
-add_executable(Test_Push  ${CMAKE_SOURCE_DIR}/test/test_push.cpp)
-target_link_libraries(Test_Push  PRIVATE ${PROJECT_NAME})
+
+set(TEST_DIR ${CMAKE_SOURCE_DIR}/test/) 
+target_link_add_executable(Test_Push ${TEST_DIR}/test_push.cpp)
