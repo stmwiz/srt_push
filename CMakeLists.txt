@@ -3,15 +3,20 @@ project(pusher)
 
 ENABLE_LANGUAGE(ASM)
 
+set(DYNAMIC_LIB_SUFFIX .so)
+set(STATIC_LIB_SUFFIX .a)
+
 if(UNIX)
-set(PLATFORM linux)
+set(OS linux)
 set(ABI x64)
 elseif(APPLE)
 elseif(WIN32)
+set(DYNAMIC_LIB_SUFFIX .dll)
+set(STATIC_LIB_SUFFIX .lib)
 endif(UNIX)
 
 set(LIBS_DIR ${CMAKE_SOURCE_DIR}/libs/)
-set(LIBS_OS_DIR ${LIBS_DIR}/${PLATFORM}/${ABI}/) 
+set(LIBS_OS_DIR ${LIBS_DIR}/${OS}/${ABI}/) 
 set(LIBS_INCLUDE_DIR ${LIBS_DIR}/include/) 
 set(LIBS_SOURCES_DIR ${LIBS_DIR}/sources/) 
 
@@ -22,27 +27,27 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++${CMAKE_CXX_STANDARD} ${FASTEST_
 
 macro(add_dynamic_lib LIB_NAME)
     add_library(${LIB_NAME} SHARED IMPORTED)
-    set_target_properties(${LIB_NAME} PROPERTIES IMPORTED_LOCATION ${LIBS_OS_DIR}/${LIB_NAME}.so)
+    set_target_properties(${LIB_NAME} PROPERTIES IMPORTED_LOCATION ${LIBS_OS_DIR}/${LIB_NAME}${DYNAMIC_LIB_SUFFIX})
     message("Add dynamic library: ${LIB_NAME}")
 endmacro()
 
 macro(add_static_lib LIB_NAME)
     add_library(${LIB_NAME} STATIC IMPORTED)
-    set_target_properties(${LIB_NAME} PROPERTIES IMPORTED_LOCATION ${LIBS_OS_DIR}/${LIB_NAME}.a)
+    set_target_properties(${LIB_NAME} PROPERTIES IMPORTED_LOCATION ${LIBS_OS_DIR}/${LIB_NAME}${STATIC_LIB_SUFFIX})
     message("Add static library: ${LIB_NAME}")
 endmacro()
 
 macro(add_lib_source SOURCE_DIR LIB_EXT)
     string(REPLACE " " "_" LIB_NAME ${SOURCE_DIR})
     add_subdirectory(${LIBS_SOURCES_DIR}/${SOURCE_DIR} ${LIBS_SOURCES_DIR}/output/${SOURCE_DIR})
-    set_target_properties(lib${LIB_NAME} PROPERTIES IMPORTED_LOCATION ${LIBS_SOURCES_DIR}/output/${SOURCE_DIR}/lib${LIB_NAME}.${LIB_EXT})
+    set_target_properties(lib${LIB_NAME} PROPERTIES IMPORTED_LOCATION ${LIBS_SOURCES_DIR}/output/${SOURCE_DIR}/lib${LIB_NAME}${LIB_EXT})
 endmacro()
 
 macro(add_static_lib_source SOURCE_DIR)
     set(BUILD_SHARED_LIBS OFF)
     set(BUILD_STATIC_LIBS ON)
 
-    add_lib_source(${SOURCE_DIR} "a")
+    add_lib_source(${SOURCE_DIR} ${STATIC_LIB_SUFFIX})
 
     set(BUILD_SHARED_LIBS OFF)
     set(BUILD_STATIC_LIBS OFF)
@@ -52,7 +57,7 @@ macro(add_dynamic_lib_source SOURCE_DIR)
     set(BUILD_SHARED_LIBS ON)
     set(BUILD_STATIC_LIBS OFF)
 
-    add_lib_source(${SOURCE_DIR} "so")
+    add_lib_source(${SOURCE_DIR} ${DYNAMIC_LIB_SUFFIX})
 
     set(BUILD_SHARED_LIBS OFF)
     set(BUILD_STATIC_LIBS OFF)
