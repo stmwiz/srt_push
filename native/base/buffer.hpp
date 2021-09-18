@@ -59,100 +59,133 @@ namespace xlab::base
   public:
     static inline SPBuffer nullVal()
     {
-      static SPBuffer bf = SPBuffer(0);
+      static SPBuffer bf = SPBuffer();
       return bf;
     }
 
   public:
-    explicit SPBuffer(int len, uint8_t *data = nullptr)
+    explicit SPBuffer(int len = 0, uint8_t *data = nullptr)
     {
-      spbuf = std::make_shared<Buffer>(len, data);
-      if (spbuf == nullptr || spbuf->isNull())
+      if (len == 0)
       {
-        spbuf == nullptr;
+        return;
+      }
+
+      spbuf_ = std::make_shared<Buffer>(len, data);
+      if (spbuf_ == nullptr || spbuf_->isNull())
+      {
+        spbuf_ = nullptr;
+      }
+
+      if (spbuf_ != nullptr)
+      {
+        offset_ = spbuf_->data();
       }
     }
 
     ~SPBuffer()
     {
-      spbuf = nullptr;
+      spbuf_ = nullptr;
     }
 
     bool isNull()
     {
-      spbuf == nullptr;
+      return spbuf_ == nullptr;
+    }
+
+    uint8_t *offset(uint8_t *offset = nullptr)
+    {
+      if (offset != nullptr)
+      {
+        this->offset_ = offset;
+      }
+
+      return this->offset_;
     }
 
     uint8_t *data() const
     {
-      if (spbuf == nullptr)
+      if (spbuf_ == nullptr)
       {
         return nullptr;
       }
 
-      return spbuf->data();
+      return spbuf_->data();
     }
 
     const int len() const
     {
-      if (spbuf == nullptr)
+      if (spbuf_ == nullptr)
       {
         return 0;
       }
 
-      return spbuf->len();
+      return spbuf_->len();
     }
 
     SPBuffer dump(int len = -INT32_MIN)
     {
-      if (spbuf == nullptr)
+      if (spbuf_ == nullptr)
       {
         return nullVal();
       }
 
       if (len == -INT32_MIN)
       {
-        return SPBuffer(spbuf->len(), spbuf->data());
+        return SPBuffer(spbuf_->len(), spbuf_->data());
       }
 
-      if (len > spbuf->len())
+      if (len > spbuf_->len())
       {
         auto buf = std::make_shared<Buffer>(len);
-        memcpy(buf->data(), spbuf->data(), spbuf->len());
-        memset(&buf->data()[spbuf->len()], 0, len - spbuf->len());
+        memcpy(buf->data(), spbuf_->data(), spbuf_->len());
+        memset(&buf->data()[spbuf_->len()], 0, len - spbuf_->len());
         return SPBuffer(buf->len(), buf->data());
       }
 
-      return SPBuffer(len, spbuf->data());
+      return SPBuffer(len, spbuf_->data());
     }
 
     SPBuffer frontInsert(int len, uint8_t *data = nullptr)
     {
-      if (spbuf == nullptr || len <= 0 || data == nullptr)
+      if (len <= 0 || data == nullptr)
       {
         return nullVal();
       }
 
-      auto buf = std::make_shared<Buffer>(spbuf->len() + len);
-      memcpy(buf->data(), spbuf->data(), spbuf->len());
-      memcpy(&buf->data()[spbuf->len()], data, len);
-      return SPBuffer(buf->len(), buf->data());
+      if (isNull())
+      {
+        return SPBuffer(len, data);
+      }
+
+      SPBuffer buf(spbuf_->len() + len);
+      memcpy(buf.data(), spbuf_->data(), spbuf_->len());
+      memcpy(&buf.data()[spbuf_->len()], data, len);
+
+      return buf;
     }
 
     SPBuffer backInsert(int len, uint8_t *data = nullptr)
     {
-      if (spbuf == nullptr || len <= 0 || data == nullptr)
+      if (len <= 0 || data == nullptr)
       {
         return nullVal();
       }
 
-      auto buf = std::make_shared<Buffer>(len + spbuf->len());
-      memcpy(buf->data(), data, len);
-      memcpy(&buf->data()[len], spbuf->data(), spbuf->len());
-      return SPBuffer(buf->len(), buf->data());
+      if (isNull())
+      {
+        return SPBuffer(len, data);
+      }
+
+      SPBuffer buf(len + spbuf_->len());
+      memcpy(buf.data(), data, len);
+      memcpy(&buf.data()[len], spbuf_->data(), spbuf_->len());
+
+      return buf;
     }
 
   private:
-    std::shared_ptr<Buffer> spbuf = nullptr;
+    std::shared_ptr<Buffer> spbuf_ = nullptr;
+    uint8_t *offset_ = nullptr;
   };
 }

@@ -7,9 +7,10 @@
 
 #include <vector>
 
-namespace xlab::Bitstream
+namespace xlab::base::Bitstream
 {
-    static inline void WB32(void *&p, uint32_t d)
+    template <typename T>
+    static inline void WB32(T &p, uint32_t d)
     {
         ((uint8_t *)(p))[3] = (d);
         ((uint8_t *)(p))[2] = (d) >> 8;
@@ -17,7 +18,8 @@ namespace xlab::Bitstream
         ((uint8_t *)(p))[0] = (d) >> 24;
     }
 
-    static inline void WL32(void *&p, uint32_t d)
+    template <typename T>
+    static inline void WL32(T &p, uint32_t d)
     {
         ((uint8_t *)(p))[0] = (d);
         ((uint8_t *)(p))[1] = (d) >> 8;

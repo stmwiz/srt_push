@@ -59,12 +59,14 @@ macro(include_directory DIR_PATH)
     message("Include Directory: ${DIR_PATH}")
 endmacro()
 
+set(NATIVE_DIR ${CMAKE_SOURCE_DIR}/native/) 
 
 include_directory(${CMAKE_SOURCE_DIR})
 include_directory(${LIBS_INCLUDE_DIR})
 include_directory(${LIBS_SOURCES_DIR})
+include_directory(${NATIVE_DIR})
 
-file(GLOB_RECURSE NATIVE_SOURCES ./native/*.cpp)
+file(GLOB_RECURSE NATIVE_SOURCES ${NATIVE_DIR}/*.cpp)
 
 #aux_source_directory(./*.cpp CPP_SOURCES)
 

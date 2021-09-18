@@ -64,5 +64,6 @@
         "variant": "cpp",
         "unordered_set": "cpp"
     },
+    "C_Cpp.errorSquiggles": "Enabled",
     // "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
 }
