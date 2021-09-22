@@ -20,7 +20,7 @@ set(LIBS_OS_DIR ${LIBS_DIR}/${OS}/${ABI}/)
 set(LIBS_INCLUDE_DIR ${LIBS_DIR}/include/) 
 set(LIBS_SOURCES_DIR ${LIBS_DIR}/sources/) 
 
-set(FASTEST_FLAG "-Ofast -Os -Oz ")
+set(FASTEST_FLAG "-Ofast -Os -Oz -fPIC")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${FASTEST_FLAG}")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++${CMAKE_CXX_STANDARD} ${FASTEST_FLAG} ")
@@ -86,8 +86,7 @@ endmacro()
 
 macro(target_link_add_moudle_lib MOUD_NAME)
 include(${MOUD_NAME})
-add_static_lib_source(lib${MOUD_NAME})
-target_link_libraries(${PROJECT_NAME} lib${MOUD_NAME})
+target_link_libraries(${PROJECT_NAME} ${MOUD_NAME})
 endmacro()
 
 
@@ -114,10 +113,12 @@ add_library(
 # add_static_lib(libcrypto)
 # find_library(EGL-lib EGL)
 
-if(NOT WIN32)
-    find_library(PTHREAD-LIB pthread)
-    target_link_libraries(${PROJECT_NAME} ${PTHREAD-LIB}) # linux
-endif()
+# if(NOT WIN32)
+#     find_library(PTHREAD-LIB pthread)
+#     target_link_libraries(${PROJECT_NAME} ${PTHREAD-LIB}) # linux
+# endif()
+
+include(FindThreads)
 
 target_link_add_static_lib_source(sigslot)
 
@@ -129,7 +130,7 @@ if(ANDROID)
     target_link_libraries(${PROJECT_NAME}  PRIVATE -landroid -llog)
 endif()
 
-#target_link_add_moudle_lib(spdlog)
+target_link_add_moudle_lib(spdlog)
 #target_link_add_moudle_lib(srt)
 
 set(TEST_DIR ${CMAKE_SOURCE_DIR}/test/) 
