@@ -24,6 +24,7 @@ set(FASTEST_FLAG "-Ofast -Os -Oz ")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${FASTEST_FLAG}")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++${CMAKE_CXX_STANDARD} ${FASTEST_FLAG} ")
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
 
 macro(add_dynamic_lib LIB_NAME)
     add_library(${LIB_NAME} SHARED IMPORTED)
@@ -83,6 +84,12 @@ add_executable(${EXE_NAME}  ${SOURCE_PATH})
 target_link_libraries(${EXE_NAME} PRIVATE ${PROJECT_NAME})
 endmacro()
 
+macro(target_link_add_moudle_lib MOUD_NAME)
+include(${MOUD_NAME})
+target_link_libraries(${MOUD_NAME} PRIVATE ${MOUD_NAME})
+endmacro()
+
+
 set(NATIVE_DIR ${CMAKE_SOURCE_DIR}/native/) 
 
 include_directory(${CMAKE_SOURCE_DIR})
@@ -121,6 +128,11 @@ if(ANDROID)
     target_link_libraries(${PROJECT_NAME}  PRIVATE -landroid -llog)
 endif()
 
+target_link_add_moudle_lib(spdlog)
+#target_link_add_moudle_lib(srt)
 
 set(TEST_DIR ${CMAKE_SOURCE_DIR}/test/) 
 target_link_add_executable(Test_Push ${TEST_DIR}/test_push.cpp)
+
+
+
