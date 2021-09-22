@@ -1,4 +1,5 @@
 #include <iostream>
+#include "base/buffer.hpp"
 
 int main()
 {

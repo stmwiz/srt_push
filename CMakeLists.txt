@@ -113,8 +113,11 @@ endif()
 
 target_link_add_static_lib_source(sigslot)
 
-if(ANDROID)
+if(ANDROID OR UNIX ) 
     target_link_add_static_lib_source(jmi)
+endif()
+
+if(ANDROID)
     target_link_libraries(${PROJECT_NAME}  PRIVATE -landroid -llog)
 endif()
 
