@@ -311,6 +311,11 @@ namespace xlab
         bool writeFrame(const base::Packet &frame);
 
     private:
+        bool writePAT();
+
+        bool writePMT();
+
+    private:
         bool newTS();
 
         void deleteTS();
@@ -339,6 +344,9 @@ namespace xlab
         std::shared_ptr<PAT> pat = nullptr;
         std::shared_ptr<PMT> pmt = nullptr;
         std::shared_ptr<PES> pes = nullptr;
+
+        uint8_t audioWriteCounter = 0;
+        uint8_t videoWriteCounter = 0;
     };
 
 }

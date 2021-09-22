@@ -16,7 +16,58 @@ namespace xlab
 
     bool TStream::writeFrame(const base::Packet &frame)
     {
-        return false;
+        header->payload_unit_start_indicator = 1;
+        pes->payload_len = frame.body.len() + PES_HEADER_LEN;
+        if (frame.isKeyFrameVideo())
+        {
+            pes->payload_len += frame.head.len();
+        }
+
+        uint16_t pid = 0;
+        while (pes->payload_len > 0)
+        {
+            if (frame.isAudio())
+            {
+                pid = param.audio_pid;
+                header->continuity_counter = audioWriteCounter++;
+                if (audioWriteCounter == 16)
+                {
+                    audioWriteCounter = 0;
+                }
+            }
+            else
+            {
+                pid = param.video_pid;
+                header->continuity_counter = videoWriteCounter++;
+                if (videoWriteCounter == 16)
+                {
+                    videoWriteCounter = 0;
+                }
+            }
+
+            header->pid_hi = (pid >> 8) & 0x1f;
+            header->pid_lo = (pid)&0xff;
+
+            writePacket(pes, frame);
+        }
+
+        return true;
+    }
+
+    bool TStream::writePAT()
+    {
+        header->payload_unit_start_indicator = 1;
+        header->adaptation_field_control = 0x01;
+        return writePacket(pat);
+    }
+
+    bool TStream::writePMT()
+    {
+        header->pid_hi = (param.pmt_pid >> 8) & 0x1f;
+        header->pid_lo = (param.pmt_pid) & 0xff;
+        header->payload_unit_start_indicator = 1;
+        header->adaptation_field_control = 0x01;
+        return writePacket(pmt);
     }
 
     bool TStream::newTS()
