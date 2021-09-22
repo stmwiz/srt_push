@@ -22,6 +22,12 @@ namespace xlab::base
         int64_t dts = 0;
         int rotate = 0;
 
+        static Packet nullVal()
+        {
+            static Packet packet;
+            return packet;
+        }
+
         bool isNonKeyFrameVideo() const
         {
             return type == PacketType::NonKeyFrameVideo;

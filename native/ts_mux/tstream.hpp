@@ -4,10 +4,9 @@
 #include <functional>
 
 #include "base/buffer.hpp"
-
+#include "base/packet.hpp"
 namespace xlab
 {
-
     class TStream final
     {
     public:
@@ -33,7 +32,7 @@ namespace xlab
         {
             explicit Header()
             {
-                memset(this, 0, sizeof(*this));
+                ::memset((void *)(this), 0, sizeof(*this));
                 this->sync_byte = 0x47;
             }
 
@@ -68,7 +67,7 @@ namespace xlab
         {
             explicit ADPField()
             {
-                memset(this, 0, sizeof(*this));
+                ::memset((void *)(this), 0, sizeof(*this));
             }
 
             uint8_t adaption_field_length : 8;
@@ -84,6 +83,14 @@ namespace xlab
 
         struct Packet
         {
+            enum class Type
+            {
+                NONE,
+                PAT,
+                PMT,
+                PES,
+            };
+
             uint8_t has_pointer_field = 0;
             /*
      * pat & pmt : filling 0xff at the end, don't use adaption field
@@ -92,20 +99,28 @@ namespace xlab
             uint8_t adp_filling = 0;
             int payload_len = 0;
             uint8_t has_pcr = 0;
+
+            virtual const Type type() const
+            {
+                return Type::NONE;
+            }
         };
 
         struct PAT : Packet
         {
-            static bool writePayload(uint8_t *&offset, uint8_t *start, std::vector<Program> programList);
+            static bool writePayload(base::SPBuffer &buf, std::vector<Program> programList);
 
             explicit PAT()
             {
-                memset(this, 0, sizeof(*this));
+                ::memset((void *)(this), 0, sizeof(*this));
             }
 
             explicit PAT(uint8_t program_count)
             {
-                memset(this, 0, sizeof(*this));
+                ::memset((void *)(this), 0, sizeof(*this));
+                this->has_pointer_field = 1;
+                this->has_pcr = 0;
+                this->adp_filling = 0;
 
                 uint16_t section_length = 5 + program_count * 4 + 4; // start + n loop + crc
                 this->table_id = 0x00;
@@ -116,10 +131,11 @@ namespace xlab
                 this->section_length_lo = section_length & 0xff;
                 this->reversed_2 = 0x3;
                 this->current_next_indicator = 1;
+            }
 
-                this->has_pointer_field = 1;
-                this->has_pcr = 0;
-                this->adp_filling = 0;
+            virtual const Type type() const
+            {
+                return Type::PAT;
             }
 
 #ifdef WORDS_BIGENDIAN
@@ -151,25 +167,22 @@ namespace xlab
 #endif
         };
 
-        struct FrameInfo
-        {
-            uint8_t frame_type = 0;
-            base::SPBuffer frame{};
-            int64_t timestamp = 0;
-        };
-
         struct PMT : Packet
         {
-            static bool writePayload(uint8_t *&offset, uint8_t *start, int program_num, int video_pid, int audio_pid);
+            static bool writePayload(base::SPBuffer &buf, int program_num, int video_pid, int audio_pid);
 
             explicit PMT()
             {
-                memset(this, 0, sizeof(*this));
+                ::memset((void *)(this), 0, sizeof(*this));
             }
 
             explicit PMT(int program_num, int video_pid)
             {
-                memset(this, 0, sizeof(*this));
+                ::memset((void *)(this), 0, sizeof(*this));
+                this->has_pointer_field = 1;
+                this->has_pcr = 0;
+                this->adp_filling = 0;
+
                 const int section_length = 9 + 2 * 5 + 4;
                 this->table_id = 0x02;
                 this->section_syntax_indicator = 1;
@@ -185,6 +198,11 @@ namespace xlab
                 this->section_length_lo = section_length & 0xff;
             }
 
+            virtual const Type type() const
+            {
+                return Type::PMT;
+            }
+
 #ifdef WORDS_BIGENDIAN
             uint8_t table_id : 8;
             uint8_t section_syntax_indicator : 1;
@@ -226,12 +244,31 @@ namespace xlab
 #endif
         };
 
-        struct OptionalPESHeader
+        struct PES : Packet
         {
-            explicit OptionalPESHeader()
+            static bool writePayload(base::SPBuffer &buf,
+                                     int &payload_len,
+                                     std::shared_ptr<Header> &header,
+                                     uint8_t stream_id,
+                                     const base::Packet &frame);
+
+            explicit PES()
             {
-                memset(this, 0, sizeof(*this));
+                ::memset((void *)(this), 0, sizeof(*this));
+                this->has_pointer_field = 0;
+                this->has_pcr = 1;
+                this->adp_filling = 1;
+
+                this->PTS_DTS_flag = 0x02;
+                this->reversed = 0x02;
+                this->PES_header_data_length = 0x05; // pts length
             }
+
+            virtual const Type type() const
+            {
+                return Type::PES;
+            }
+
 #ifdef WORDS_BIGENDIAN
             uint8_t : 2;
             uint8_t PES_scrambling_control : 2;
@@ -271,15 +308,14 @@ namespace xlab
         ~TStream();
 
     public:
-        bool writeFrame(const FrameInfo &frame);
-
-    private:
-        bool init();
-
-        void deInit();
+        bool writeFrame(const base::Packet &frame);
 
     private:
         bool newTS();
+
+        void deleteTS();
+
+        bool writePacket(std::shared_ptr<Packet> packet, const base::Packet &frame = base::Packet::nullVal());
 
     public:
         static constexpr uint8_t PAT_SECT_HEADER_LEN = 8;
@@ -297,11 +333,12 @@ namespace xlab
     private:
         Param param;
         base::SPBuffer buf{TS_PACKET_SIZE};
+        std::shared_ptr<Header> header = nullptr;
+        std::shared_ptr<ADPField> adp = nullptr;
+
         std::shared_ptr<PAT> pat = nullptr;
         std::shared_ptr<PMT> pmt = nullptr;
-        Packet pes{};
-        Header header{};
-        ADPField adp{};
+        std::shared_ptr<PES> pes = nullptr;
     };
 
 }

@@ -9,7 +9,7 @@ namespace xlab::base
   class Buffer final
   {
   public:
-    explicit Buffer(int len, uint8_t *data = nullptr)
+    explicit Buffer(int64_t len, uint8_t *data = nullptr)
     {
       if (len <= 0)
       {
@@ -27,6 +27,7 @@ namespace xlab::base
       start_ = new uint8_t[len];
       ::memcpy(start_, data, len);
       len_ = len;
+      offset_ = 0;
     }
 
     ~Buffer()
@@ -44,14 +45,35 @@ namespace xlab::base
       return start_;
     }
 
-    const int len() const
+    const int64_t offset() const
+    {
+      return offset_;
+    }
+
+    const int64_t offset(int64_t offset_value)
+    {
+      if (offset_value >= len() || offset_value < 0)
+      {
+        return -1;
+      }
+
+      if (offset_value >= 0)
+      {
+        offset_ = offset_value;
+      }
+
+      return offset_;
+    }
+
+    const int64_t len() const
     {
       return len_;
     }
 
   private:
     uint8_t *start_ = nullptr;
-    int len_ = 0;
+    int64_t offset_ = 0;
+    int64_t len_ = 0;
   };
 
   class SPBuffer final
@@ -76,11 +98,6 @@ namespace xlab::base
       {
         spbuf_ = nullptr;
       }
-
-      if (spbuf_ != nullptr)
-      {
-        offset_ = spbuf_->data();
-      }
     }
 
     ~SPBuffer()
@@ -88,24 +105,71 @@ namespace xlab::base
       spbuf_ = nullptr;
     }
 
-    bool isNull()
+    bool isNull() const
     {
       return spbuf_ == nullptr;
     }
 
-    uint8_t *offset(uint8_t *offset = nullptr)
+    const int64_t offset() const
     {
-      if (offset != nullptr)
+      if (isNull())
       {
-        this->offset_ = offset;
+        return -1;
       }
 
-      return this->offset_;
+      return spbuf_->offset();
+    }
+
+    int64_t offset(int64_t offset_value)
+    {
+      if (isNull())
+      {
+        return -1;
+      }
+
+      return spbuf_->offset(offset_value);
+    }
+
+    const int64_t surplus() const
+    {
+      if (isNull())
+      {
+        return -1;
+      }
+
+      return len() - offset();
+    }
+
+    uint8_t *offsetData() const
+    {
+
+      if (isNull())
+      {
+        return nullptr;
+      }
+
+      return &data()[offset()];
+    }
+
+    uint8_t *offsetData(uint8_t *offset_ptr)
+    {
+
+      if (isNull() || offset_ptr == nullptr)
+      {
+        return nullptr;
+      }
+
+      if (offset(offset_ptr - data()) < 0)
+      {
+        return nullptr;
+      }
+
+      return &data()[offset()];
     }
 
     uint8_t *data() const
     {
-      if (spbuf_ == nullptr)
+      if (isNull())
       {
         return nullptr;
       }
@@ -115,7 +179,7 @@ namespace xlab::base
 
     const int len() const
     {
-      if (spbuf_ == nullptr)
+      if (isNull())
       {
         return 0;
       }
@@ -123,30 +187,35 @@ namespace xlab::base
       return spbuf_->len();
     }
 
-    SPBuffer dump(int len = -INT32_MIN)
+    SPBuffer dump()
     {
-      if (spbuf_ == nullptr)
+      if (isNull())
       {
         return nullVal();
       }
 
-      if (len == -INT32_MIN)
-      {
-        return SPBuffer(spbuf_->len(), spbuf_->data());
-      }
-
-      if (len > spbuf_->len())
-      {
-        auto buf = std::make_shared<Buffer>(len);
-        memcpy(buf->data(), spbuf_->data(), spbuf_->len());
-        memset(&buf->data()[spbuf_->len()], 0, len - spbuf_->len());
-        return SPBuffer(buf->len(), buf->data());
-      }
-
-      return SPBuffer(len, spbuf_->data());
+      return SPBuffer(spbuf_->len(), spbuf_->data());
     }
 
-    SPBuffer frontInsert(int len, uint8_t *data = nullptr)
+    SPBuffer dump(int len)
+    {
+      if (isNull())
+      {
+        return nullVal();
+      }
+
+      if (len <= spbuf_->len())
+      {
+        return SPBuffer(len, spbuf_->data());
+      }
+
+      auto buf = std::make_shared<Buffer>(len);
+      memcpy(buf->data(), spbuf_->data(), spbuf_->len());
+      memset(&buf->data()[spbuf_->len()], 0, len - spbuf_->len());
+      return SPBuffer(buf->len(), buf->data());
+    }
+
+    SPBuffer frontInsert(int len, uint8_t *data)
     {
       if (len <= 0 || data == nullptr)
       {
@@ -165,7 +234,7 @@ namespace xlab::base
       return buf;
     }
 
-    SPBuffer backInsert(int len, uint8_t *data = nullptr)
+    SPBuffer backInsert(int len, uint8_t *data)
     {
       if (len <= 0 || data == nullptr)
       {
@@ -186,6 +255,5 @@ namespace xlab::base
 
   private:
     std::shared_ptr<Buffer> spbuf_ = nullptr;
-    uint8_t *offset_ = nullptr;
   };
 }
