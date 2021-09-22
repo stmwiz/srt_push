@@ -86,7 +86,8 @@ endmacro()
 
 macro(target_link_add_moudle_lib MOUD_NAME)
 include(${MOUD_NAME})
-target_link_libraries(${MOUD_NAME} PRIVATE ${MOUD_NAME})
+add_static_lib_source(lib${MOUD_NAME})
+target_link_libraries(${PROJECT_NAME} lib${MOUD_NAME})
 endmacro()
 
 
@@ -128,7 +129,7 @@ if(ANDROID)
     target_link_libraries(${PROJECT_NAME}  PRIVATE -landroid -llog)
 endif()
 
-target_link_add_moudle_lib(spdlog)
+#target_link_add_moudle_lib(spdlog)
 #target_link_add_moudle_lib(srt)
 
 set(TEST_DIR ${CMAKE_SOURCE_DIR}/test/) 
