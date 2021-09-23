@@ -2,3 +2,4 @@
 build/
 libs/sources/output/
 */.gitkeep
+*/.*
