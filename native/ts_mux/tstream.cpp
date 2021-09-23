@@ -87,14 +87,14 @@ namespace xlab
 
     bool TStream::writePacket(std::shared_ptr<Packet> packet, const base::Packet &frame)
     {
-        auto tmp_ptr = buf.offsetData();
+        auto tmp_ptr = tsBuf.offsetData();
         if (packet->has_pcr)
         {
             header->adaptation_field_control = 0x03;
         }
         else if (packet->adp_filling && packet->payload_len)
         {
-            if (TS_HEADER_LEN + packet->payload_len < TS_PACKET_SIZE)
+            if (TS_HEADER_LEN + packet->payload_len < tsBuf.len())
             {
                 header->adaptation_field_control = 0x03;
             }
@@ -126,7 +126,7 @@ namespace xlab
                 adp_len += PCR_LEN;
             }
 
-            int stuff_len = TS_PACKET_SIZE - (TS_HEADER_LEN + 1 + adp_len + packet->payload_len); // 1 - adaption_field_length
+            int stuff_len = tsBuf.len() - (TS_HEADER_LEN + 1 + adp_len + packet->payload_len); // 1 - adaption_field_length
             if (stuff_len > 0)
             {
                 adp_len += stuff_len;
@@ -174,27 +174,27 @@ namespace xlab
             *tmp_ptr++ = 0x00;
         }
 
-        buf.offset(tmp_ptr - buf.data());
+        tsBuf.offset(tmp_ptr - tsBuf.data());
 
         /* write payload */
         switch (packet->type())
         {
         case Packet::Type::PAT:
         {
-            PAT::writePayload(buf, param.program_list);
+            PAT::writePayload(tsBuf, param.program_list);
             break;
         }
 
         case Packet::Type::PMT:
         {
-            PMT::writePayload(buf, param.program_list.size(), param.video_pid, param.audio_pid);
+            PMT::writePayload(tsBuf, param.program_list.size(), param.video_pid, param.audio_pid);
             break;
         }
 
         case Packet::Type::PES:
         {
             auto &streamid = frame.isAudio() ? param.audio_pid : param.video_pid;
-            PES::writePayload(buf, packet->payload_len, header, streamid, frame);
+            PES::writePayload(tsBuf, packet->payload_len, header, streamid, frame);
             break;
         }
         default:
@@ -204,15 +204,15 @@ namespace xlab
         }
 
         /* write stuff */
-        if (!packet->adp_filling && (buf.surplus() > 0))
+        if (!packet->adp_filling && (tsBuf.surplus() > 0))
         {
-            memset(buf.offsetData(), 0xff, buf.surplus());
+            memset(tsBuf.offsetData(), 0xff, tsBuf.surplus());
         }
 
-        buf.offset(0);
+        tsBuf.offset(0);
         if (param.output != nullptr)
         {
-            param.output(buf);
+            param.output(tsBuf);
         }
 
         return true;
@@ -319,7 +319,7 @@ namespace xlab
             header->payload_unit_start_indicator = 0;
         }
 
-        const int len = buf.len() - (tmp_ptr - buf.data());
+        const int len = TS_PACKET_SIZE - (tmp_ptr - buf.offsetData());
         memcpy(tmp_ptr, frame.body.offsetData(), len);
         tmp_ptr += len;
 

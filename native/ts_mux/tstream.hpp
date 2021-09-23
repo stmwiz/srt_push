@@ -337,7 +337,7 @@ namespace xlab
 
     private:
         Param param;
-        base::SPBuffer buf{TS_PACKET_SIZE};
+        base::SPBuffer tsBuf{TS_PACKET_SIZE};
         std::shared_ptr<Header> header = nullptr;
         std::shared_ptr<ADPField> adp = nullptr;
 
