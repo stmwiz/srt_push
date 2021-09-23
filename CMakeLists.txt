@@ -35,7 +35,6 @@ set(STATIC_LIB_SUFFIX .lib)
 endif(POSIX)
 
 set(ABI x64)
-
 if(LINUX)
 set(OS linux)
 elseif(ANDROID) 
@@ -144,18 +143,18 @@ add_library(
 # add_static_lib(libcrypto)
 # find_library(EGL-lib EGL)
 
-target_link_add_static_lib_source(sigslot)
-
-if(ANDROID OR UNIX ) 
-    target_link_add_static_lib_source(jmi)
-endif()
+#target_link_add_static_lib_source(sigslot)
 
 if(ANDROID)
     target_link_libraries(${PROJECT_NAME}  PRIVATE -landroid -llog)
 endif()
 
+if(ANDROID OR UNIX ) 
+target_link_add_moudle_lib(jmi)
+endif()
 target_link_add_moudle_lib(spdlog)
 target_link_add_moudle_lib(srt)
+target_link_add_moudle_lib(sigslot)
 
 set(TEST_DIR ${CMAKE_SOURCE_DIR}/test/) 
 target_link_add_executable(Test_Push ${TEST_DIR}/test_push.cpp)

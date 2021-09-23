@@ -12,4 +12,6 @@ FetchContent_Declare(
   GIT_TAG           ${${DEP_NAME}_GIT_TAG}
 )
 
+include_directories(${CMAKE_BINARY_DIR}/_deps/${DEP_NAME}-src/srtcore)
+
 FetchContent_MakeAvailable(${DEP_NAME})

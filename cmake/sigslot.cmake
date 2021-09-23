@@ -2,9 +2,9 @@
 include(FetchContent)
 cmake_minimum_required(VERSION 3.14)
 
-set(DEP_NAME  spdlog)
-set(${DEP_NAME}_GIT_TAG  v1.9.2)  # 指定版本
-set(${DEP_NAME}_GIT_URL  https://github.com/gabime/spdlog.git)  # 指定git仓库地址
+set(DEP_NAME  sigslot)
+set(${DEP_NAME}_GIT_TAG  v1.2.0)  # 指定版本
+set(${DEP_NAME}_GIT_URL  https://github.com/palacaze/sigslot.git)  # 指定git仓库地址
 
 FetchContent_Declare(
   ${DEP_NAME}
