@@ -1,19 +1,50 @@
 cmake_minimum_required(VERSION 3.14)
 project(pusher)
-
 ENABLE_LANGUAGE(ASM)
 
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
+
+include(FindPkgConfig)
+# XXX See 'if (MINGW)' condition below, may need fixing.
+include(FindThreads)
+include(CheckFunctionExists)
+include(haiUtil)
+
+# Platform shortcuts
+string(TOLOWER      ${CMAKE_SYSTEM_NAME} SYSNAME_LC)
+set_if(DARWIN	   (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+					OR (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
+					OR (${CMAKE_SYSTEM_NAME} MATCHES "tvOS")
+					OR (${CMAKE_SYSTEM_NAME} MATCHES "watchOS"))
+set_if(LINUX       ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+set_if(BSD         ${SYSNAME_LC} MATCHES "bsd$")
+set_if(MICROSOFT   WIN32 AND (NOT MINGW AND NOT CYGWIN))
+set_if(GNU         ${CMAKE_SYSTEM_NAME} MATCHES "GNU")
+set_if(ANDROID     ${SYSNAME_LC} MATCHES "android")
+set_if(SUNOS       "${SYSNAME_LC}" MATCHES "sunos")
+set_if(POSIX       LINUX OR DARWIN OR BSD OR SUNOS OR ANDROID OR (CYGWIN AND CYGWIN_USE_POSIX))
+set_if(SYMLINKABLE LINUX OR DARWIN OR BSD OR SUNOS OR CYGWIN OR GNU)
+
+
+if(POSIX)
 set(DYNAMIC_LIB_SUFFIX .so)
 set(STATIC_LIB_SUFFIX .a)
-
-if(UNIX)
-set(OS linux)
-set(ABI x64)
-elseif(APPLE)
-elseif(WIN32)
+else()
 set(DYNAMIC_LIB_SUFFIX .dll)
 set(STATIC_LIB_SUFFIX .lib)
-endif(UNIX)
+endif(POSIX)
+
+set(ABI x64)
+
+if(LINUX)
+set(OS linux)
+elseif(ANDROID) 
+set(OS android)
+elseif(WIN32)
+set(OS win32)
+elseif(DARWIN])
+set(OS mac)
+endif(LINUX)
 
 set(LIBS_DIR ${CMAKE_SOURCE_DIR}/libs/)
 set(LIBS_OS_DIR ${LIBS_DIR}/${OS}/${ABI}/) 
@@ -24,7 +55,7 @@ set(FASTEST_FLAG "-Ofast -Os -Oz ")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${FASTEST_FLAG}")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++${CMAKE_CXX_STANDARD} ${FASTEST_FLAG} -fPIC")
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
+
 
 macro(add_dynamic_lib LIB_NAME)
     add_library(${LIB_NAME} SHARED IMPORTED)
@@ -112,8 +143,6 @@ add_library(
 # add_static_lib(libssl)
 # add_static_lib(libcrypto)
 # find_library(EGL-lib EGL)
-
-include(FindThreads)
 
 target_link_add_static_lib_source(sigslot)
 
