@@ -18,6 +18,7 @@ namespace xlab
 
         struct Param
         {
+            using Callback = std::function<int(std::shared_ptr<base::Buffer> buf)>;
             uint8_t audio_stream_id = 0;
             uint8_t video_stream_id = 0;
             uint16_t pmt_pid = 0;
@@ -25,7 +26,7 @@ namespace xlab
             uint16_t video_pid = 0;
             int64_t pcr = 0;
             std::vector<Program> program_list;
-            std::function<int(std::shared_ptr<base::Buffer> buf)> output;
+            Callback output;
         };
 
         struct Header
@@ -304,7 +305,9 @@ namespace xlab
 
     public:
         explicit TStream() = delete;
+
         explicit TStream(const Param &par);
+
         ~TStream();
 
     public:
