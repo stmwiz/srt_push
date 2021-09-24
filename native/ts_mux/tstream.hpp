@@ -10,6 +10,8 @@ namespace xlab
     class TStream final
     {
     public:
+        using OutputCallback = std::function<int(std::shared_ptr<base::Buffer> buf)>;
+
         struct Program
         {
             int program_num = 0;
@@ -18,7 +20,6 @@ namespace xlab
 
         struct Param
         {
-            using Callback = std::function<int(std::shared_ptr<base::Buffer> buf)>;
             uint8_t audio_stream_id = 0;
             uint8_t video_stream_id = 0;
             uint16_t pmt_pid = 0;
@@ -26,7 +27,7 @@ namespace xlab
             uint16_t video_pid = 0;
             int64_t pcr = 0;
             std::vector<Program> program_list;
-            Callback output;
+            OutputCallback output;
         };
 
         struct Header

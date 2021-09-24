@@ -11,7 +11,7 @@ namespace xlab
     public:
         explicit TSMux() = delete;
 
-        explicit TSMux(TStream::Param::Callback outCb);
+        explicit TSMux(TStream::OutputCallback outCb);
 
         ~TSMux();
 
