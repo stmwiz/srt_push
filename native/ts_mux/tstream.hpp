@@ -25,7 +25,7 @@ namespace xlab
             uint16_t video_pid = 0;
             int64_t pcr = 0;
             std::vector<Program> program_list;
-            std::function<int(base::SPBuffer buf)> output;
+            std::function<int(std::shared_ptr<base::Buffer> buf)> output;
         };
 
         struct Header
@@ -108,7 +108,7 @@ namespace xlab
 
         struct PAT : Packet
         {
-            static bool writePayload(base::SPBuffer &buf, std::vector<Program> programList);
+            static bool writePayload(std::shared_ptr<base::Buffer> &buf, std::vector<Program> programList);
 
             explicit PAT()
             {
@@ -169,7 +169,7 @@ namespace xlab
 
         struct PMT : Packet
         {
-            static bool writePayload(base::SPBuffer &buf, int program_num, int video_pid, int audio_pid);
+            static bool writePayload(std::shared_ptr<base::Buffer> &buf, int program_num, int video_pid, int audio_pid);
 
             explicit PMT()
             {
@@ -246,7 +246,7 @@ namespace xlab
 
         struct PES : Packet
         {
-            static bool writePayload(base::SPBuffer &buf,
+            static bool writePayload(std::shared_ptr<base::Buffer> &buf,
                                      int &payload_len,
                                      std::shared_ptr<Header> &header,
                                      uint8_t stream_id,
@@ -337,7 +337,7 @@ namespace xlab
 
     private:
         Param param;
-        base::SPBuffer tsBuf{TS_PACKET_SIZE};
+        std::shared_ptr<base::Buffer> tsBuf = nullptr;
         std::shared_ptr<Header> header = nullptr;
         std::shared_ptr<ADPField> adp = nullptr;
 

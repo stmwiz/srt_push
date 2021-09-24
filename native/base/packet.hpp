@@ -17,9 +17,9 @@ namespace xlab::base
     struct Packet final
     {
         PacketType type = PacketType::None;
-        SPBuffer head;
-        SPBuffer body;
-        int64_t dts = 0;
+        std::shared_ptr<Buffer> head = nullptr;
+        std::shared_ptr<Buffer> body = nullptr;
+        int64_t dtsUs = 0;
         int rotate = 0;
 
         static Packet nullVal()

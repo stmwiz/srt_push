@@ -18,7 +18,7 @@ namespace xlab::PushAPI
               const int headLen,
               const uint8_t *body,
               const int bodyLen,
-              const int64_t dts,
+              const int64_t dtsUs,
               const int pktType,
               const int rotate);
 

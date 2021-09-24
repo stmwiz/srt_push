@@ -8,6 +8,7 @@ namespace xlab
 
     TStream::TStream(const Param &par) : param(par)
     {
+        tsBuf = std::make_shared<base::Buffer>(TS_PACKET_SIZE);
     }
 
     TStream::~TStream()
@@ -17,10 +18,10 @@ namespace xlab
     bool TStream::writeFrame(const base::Packet &frame)
     {
         header->payload_unit_start_indicator = 1;
-        pes->payload_len = frame.body.len() + PES_HEADER_LEN;
+        pes->payload_len = frame.body->len() + PES_HEADER_LEN;
         if (frame.isKeyFrameVideo())
         {
-            pes->payload_len += frame.head.len();
+            pes->payload_len += frame.head->len();
         }
 
         uint16_t pid = 0;
@@ -87,14 +88,14 @@ namespace xlab
 
     bool TStream::writePacket(std::shared_ptr<Packet> packet, const base::Packet &frame)
     {
-        auto tmp_ptr = tsBuf.offsetData();
+        auto tmp_ptr = tsBuf->offset();
         if (packet->has_pcr)
         {
             header->adaptation_field_control = 0x03;
         }
         else if (packet->adp_filling && packet->payload_len)
         {
-            if (TS_HEADER_LEN + packet->payload_len < tsBuf.len())
+            if (TS_HEADER_LEN + packet->payload_len < tsBuf->len())
             {
                 header->adaptation_field_control = 0x03;
             }
@@ -126,7 +127,7 @@ namespace xlab
                 adp_len += PCR_LEN;
             }
 
-            int stuff_len = tsBuf.len() - (TS_HEADER_LEN + 1 + adp_len + packet->payload_len); // 1 - adaption_field_length
+            int stuff_len = tsBuf->len() - (TS_HEADER_LEN + 1 + adp_len + packet->payload_len); // 1 - adaption_field_length
             if (stuff_len > 0)
             {
                 adp_len += stuff_len;
@@ -174,7 +175,7 @@ namespace xlab
             *tmp_ptr++ = 0x00;
         }
 
-        tsBuf.offset(tmp_ptr - tsBuf.data());
+        tsBuf->setOffset(tmp_ptr);
 
         /* write payload */
         switch (packet->type())
@@ -204,12 +205,12 @@ namespace xlab
         }
 
         /* write stuff */
-        if (!packet->adp_filling && (tsBuf.surplus() > 0))
+        if (!packet->adp_filling && (tsBuf->surplus() > 0))
         {
-            memset(tsBuf.offsetData(), 0xff, tsBuf.surplus());
+            memset(tsBuf->offset(), 0xff, tsBuf->surplus());
         }
 
-        tsBuf.offset(0);
+        tsBuf->setOffsetIndex(0);
         if (param.output != nullptr)
         {
             param.output(tsBuf);
@@ -218,9 +219,9 @@ namespace xlab
         return true;
     }
 
-    bool TStream::PAT::writePayload(base::SPBuffer &buf, std::vector<Program> programList)
+    bool TStream::PAT::writePayload(std::shared_ptr<base::Buffer> &buf, std::vector<Program> programList)
     {
-        auto tmp_ptr = buf.offsetData();
+        auto tmp_ptr = buf->offset();
         *(PAT *)tmp_ptr = PAT(programList.size());
         tmp_ptr += sizeof(PAT);
 
@@ -237,19 +238,18 @@ namespace xlab
             *tmp_ptr++ = p.program_map_pid & 0xff;
         }
 
-        const auto start = buf.data() + 5;
+        const auto start = buf->start() + 5;
         const auto crc = Crc::CalcCrc(start, tmp_ptr - start);
         base::Bitstream::WB32<decltype(tmp_ptr)>(tmp_ptr, crc);
         tmp_ptr += 4;
 
-        buf.offsetData(tmp_ptr);
+        buf->setOffset(tmp_ptr);
         return true;
     }
 
-    bool TStream::PMT::writePayload(base::SPBuffer &buf, int program_num, int video_pid, int audio_pid)
+    bool TStream::PMT::writePayload(std::shared_ptr<base::Buffer> &buf, int program_num, int video_pid, int audio_pid)
     {
-
-        auto tmp_ptr = buf.offsetData();
+        auto tmp_ptr = buf->offset();
         *(PMT *)tmp_ptr = PMT(program_num, video_pid);
         tmp_ptr += sizeof(PMT);
 
@@ -266,25 +266,25 @@ namespace xlab
         *tmp_ptr++ = 0xf0;                                   // es info length
         *tmp_ptr++ = 0x00;
 
-        const auto start = buf.data() + 5;
+        const auto start = buf->start() + 5;
         const auto crc = Crc::CalcCrc(start, tmp_ptr - start);
         base::Bitstream::WB32<decltype(tmp_ptr)>(tmp_ptr, crc);
         tmp_ptr += 4;
 
-        buf.offsetData(tmp_ptr);
+        buf->setOffset(tmp_ptr);
 
         return true;
     }
 
-    bool TStream::PES::writePayload(base::SPBuffer &buf,
+    bool TStream::PES::writePayload(std::shared_ptr<base::Buffer> &buf,
                                     int &payload_len,
                                     std::shared_ptr<Header> &header,
                                     uint8_t stream_id,
                                     const base::Packet &frame)
     {
-        auto tmp_ptr = buf.offsetData();
+        auto tmp_ptr = buf->offset();
         const uint16_t pes_pkt_len = payload_len - 4 - 2; // 4 packet start code + stream id
-        const int64_t pts = frame.dts * 90;
+        const int64_t pts = frame.dtsUs * 90 / 1000;
         if (header->payload_unit_start_indicator)
         {
             *tmp_ptr++ = 0x00;
@@ -307,20 +307,20 @@ namespace xlab
             /* aud */
             if (frame.isKeyFrameVideo())
             {
-                memcpy(tmp_ptr, frame.head.data(), frame.head.len());
-                tmp_ptr += frame.head.len();
+                memcpy(tmp_ptr, frame.head->start(), frame.head->len());
+                tmp_ptr += frame.head->len();
             }
 
             if (header->adaptation_field_control == 0x03)
             {
-                payload_len -= (tmp_ptr - buf.offsetData());
+                payload_len -= (tmp_ptr - buf->offset());
             }
 
             header->payload_unit_start_indicator = 0;
         }
 
-        const int len = TS_PACKET_SIZE - (tmp_ptr - buf.offsetData());
-        memcpy(tmp_ptr, frame.body.offsetData(), len);
+        const int len = buf->len() - (tmp_ptr - buf->start());
+        memcpy(tmp_ptr, frame.body->offset(), len);
         tmp_ptr += len;
 
         if (header->adaptation_field_control != 0x03)
@@ -332,7 +332,7 @@ namespace xlab
             payload_len -= len;
         }
 
-        buf.offsetData(tmp_ptr);
+        buf->setOffset(tmp_ptr);
 
         return true;
     }
