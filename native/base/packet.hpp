@@ -47,6 +47,15 @@ namespace xlab::base
         {
             return type == PacketType::None;
         }
+
+        void reset()
+        {
+            type = PacketType::None;
+            head = nullptr;
+            body = nullptr;
+            dtsUs = 0;
+            rotate = 0;
+        }
     };
 
 } // namespace xlab

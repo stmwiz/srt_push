@@ -249,8 +249,8 @@ namespace xlab
             static bool writePayload(std::shared_ptr<base::Buffer> &buf,
                                      int &payload_len,
                                      std::shared_ptr<Header> &header,
-                                     uint8_t stream_id,
-                                     const base::Packet &frame);
+                                     std::shared_ptr<base::Packet> &frame,
+                                     uint8_t stream_id);
 
             explicit PES()
             {
@@ -308,7 +308,7 @@ namespace xlab
         ~TStream();
 
     public:
-        bool writeFrame(const base::Packet &frame);
+        bool writeFrame(std::shared_ptr<base::Packet> frame);
 
     private:
         bool writePAT();
@@ -320,7 +320,7 @@ namespace xlab
 
         void deleteTS();
 
-        bool writePacket(std::shared_ptr<Packet> packet, const base::Packet &frame = base::Packet::nullVal());
+        bool writePacket(std::shared_ptr<Packet> packet, std::shared_ptr<base::Packet> frame = nullptr);
 
     public:
         static constexpr uint8_t PAT_SECT_HEADER_LEN = 8;

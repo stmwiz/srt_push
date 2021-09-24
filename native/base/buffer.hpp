@@ -67,6 +67,16 @@ namespace xlab::base
       offsetIndex_ = offset_value;
     }
 
+    const void addOffsetIndex(int64_t offset_value)
+    {
+      setOffsetIndex(offsetIndex() + offset_value);
+    }
+
+    const void subOffsetIndex(int64_t offset_value)
+    {
+      setOffsetIndex(offsetIndex() - offset_value);
+    }
+
     const int64_t len() const
     {
       return len_;

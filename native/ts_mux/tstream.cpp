@@ -15,19 +15,19 @@ namespace xlab
     {
     }
 
-    bool TStream::writeFrame(const base::Packet &frame)
+    bool TStream::writeFrame(std::shared_ptr<base::Packet> frame)
     {
         header->payload_unit_start_indicator = 1;
-        pes->payload_len = frame.body->len() + PES_HEADER_LEN;
-        if (frame.isKeyFrameVideo())
+        pes->payload_len = frame->body->len() + PES_HEADER_LEN;
+        if (frame->isKeyFrameVideo())
         {
-            pes->payload_len += frame.head->len();
+            pes->payload_len += frame->head->len();
         }
 
         uint16_t pid = 0;
         while (pes->payload_len > 0)
         {
-            if (frame.isAudio())
+            if (frame->isAudio())
             {
                 pid = param.audio_pid;
                 header->continuity_counter = audioWriteCounter++;
@@ -86,7 +86,7 @@ namespace xlab
     {
     }
 
-    bool TStream::writePacket(std::shared_ptr<Packet> packet, const base::Packet &frame)
+    bool TStream::writePacket(std::shared_ptr<Packet> packet, std::shared_ptr<base::Packet> frame)
     {
         auto tmp_ptr = tsBuf->offset();
         if (packet->has_pcr)
@@ -194,8 +194,8 @@ namespace xlab
 
         case Packet::Type::PES:
         {
-            auto &streamid = frame.isAudio() ? param.audio_pid : param.video_pid;
-            PES::writePayload(tsBuf, packet->payload_len, header, streamid, frame);
+            auto &streamid = frame->isAudio() ? param.audio_pid : param.video_pid;
+            PES::writePayload(tsBuf, packet->payload_len, header, frame, streamid);
             break;
         }
         default:
@@ -279,14 +279,16 @@ namespace xlab
     bool TStream::PES::writePayload(std::shared_ptr<base::Buffer> &buf,
                                     int &payload_len,
                                     std::shared_ptr<Header> &header,
-                                    uint8_t stream_id,
-                                    const base::Packet &frame)
+                                    std::shared_ptr<base::Packet> &frame,
+                                    uint8_t stream_id)
     {
         auto tmp_ptr = buf->offset();
         const uint16_t pes_pkt_len = payload_len - 4 - 2; // 4 packet start code + stream id
-        const int64_t pts = frame.dtsUs * 90 / 1000;
+        const int64_t pts = frame->dtsUs * 90 / 1000;
         if (header->payload_unit_start_indicator)
         {
+            frame->body->setOffsetIndex(0);
+
             *tmp_ptr++ = 0x00;
             *tmp_ptr++ = 0x00;
             *tmp_ptr++ = 0x01;
@@ -305,10 +307,10 @@ namespace xlab
             *tmp_ptr++ = ((pts << 1) & 0xfe) | 0x01;
 
             /* aud */
-            if (frame.isKeyFrameVideo())
+            if (frame->isKeyFrameVideo())
             {
-                memcpy(tmp_ptr, frame.head->start(), frame.head->len());
-                tmp_ptr += frame.head->len();
+                memcpy(tmp_ptr, frame->head->start(), frame->head->len());
+                tmp_ptr += frame->head->len();
             }
 
             if (header->adaptation_field_control == 0x03)
@@ -320,8 +322,9 @@ namespace xlab
         }
 
         const int len = buf->len() - (tmp_ptr - buf->start());
-        memcpy(tmp_ptr, frame.body->offset(), len);
+        memcpy(tmp_ptr, frame->body->offset(), len);
         tmp_ptr += len;
+        frame->body->addOffsetIndex(len);
 
         if (header->adaptation_field_control != 0x03)
         {
