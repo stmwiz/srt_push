@@ -9,7 +9,6 @@
 
 namespace xlab::base
 {
-
     class XLog final
     {
         static inline std::mutex LoggerLock;
