@@ -1,5 +1,6 @@
 #pragma once
 
+#include <climits>
 #include <srt/srt.h>
 
 #include "libsrt_param.hpp"
@@ -15,9 +16,9 @@ namespace xlab
         {
             return -(EAGAIN);
         }
-        xloge("%s", srt_getlasterror_str());
+        xloge("{}", srt_getlasterror_str());
 
-        return os_errno ? -(os_errno) : -INT_MIN;
+        return os_errno ? -(os_errno) : -INT32_MIN;
     }
 
     static inline void open_socket_fail_restart(addrinfo *curAi, int &Fd, int &ret)

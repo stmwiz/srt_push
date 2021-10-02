@@ -9,8 +9,9 @@
             "defines": [],
             "compilerPath": "/usr/bin/clang",
             "intelliSenseMode": "linux-clang-x64",
-            "compileCommands": "${workspaceFolder}/build/compile_commands.json"
-            // "configurationProvider": "ms-vscode.cmake-tools"
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+            // "configurationProvider": "ms-vscode.cmake-tools",
+            "configurationProvider": "go2sh.cmake-integration"
         }
     ],
     "version": 4

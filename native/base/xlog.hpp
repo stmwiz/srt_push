@@ -78,7 +78,7 @@ namespace xlab::base
 ///打印指针用fmt::ptr()转换
 #ifndef __FILE_NAME__
 #include <libgen.h>
-#define __FILE_NAME__ (basename(__FILE__))
+#define __FILE_NAME__ (basename((char*)(__FILE__)))
 #endif
 
 #ifndef xlog

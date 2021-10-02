@@ -15,6 +15,7 @@ namespace xlab
 
     int LibSrt::open()
     {
+        return 0;
     }
 
     void LibSrt::close()
@@ -54,7 +55,8 @@ namespace xlab
         do
         {
             isRestart = false;
-            fd = srt_socket(curAi->ai_family, curAi->ai_socktype, 0);
+            fd = srt_create_socket();
+            // fd = srt_socket(curAi->ai_family, curAi->ai_socktype, 0);
             if (fd < 0)
             {
                 ret = libsrt_neterrno();
