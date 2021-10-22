@@ -1,44 +1,42 @@
 #pragma once
 
+#include <srt/srt.h>
+
+#include <atomic>
 #include <memory>
 #include <string>
 
-#include <srt/srt.h>
-
 #include "libsrt_param.hpp"
 
-namespace xlab
-{
+namespace xlab {
 
-    class LibSrt
-    {
-    public:
-        explicit LibSrt(const SRTParam &param, const std::string &ipAddr, int port, SRTIOFlag flag = SRTIOFlag::WRITE);
+class LibSrt {
+   public:
+    explicit LibSrt(const SRTParam &param, const std::string &ipAddr, int port, SRTIOFlag flag);
 
-        ~LibSrt();
+    ~LibSrt();
 
-    public:
-        void read();
+   public:
+    bool read(uint8_t *buf, int size);
 
-        void write();
+    bool write(const uint8_t *buf, int size);
 
-    private:
-        int open();
+    void quit();
 
-        void close();
+    bool open();
 
-    private:
-        int getAddrInfo(addrinfo *&curAi);
+    void close();
 
-        int openSocket(addrinfo *&curAi);
+   private:
+    SRTParam par;
+    SRTIOFlag ioFlag;
+    std::string ip;
+    int port;
 
-    private:
-        SRTIOFlag ioFlag;
-        SRTParam par;
-        int fd;
-        int eid;
-        std::string ip;
-        int port;
-    };
+    bool quitIO;
+    SRTSOCKET sockFd;
+    int eid;
+    int maxPacketSize;
+};
 
-}
+}  // namespace xlab

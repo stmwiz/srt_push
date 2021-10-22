@@ -1,24 +1,29 @@
 #pragma once
 
-#include <memory>
-
 #include <srt/srt.h>
 
-namespace xlab
-{
-    class SRTPush
-    {
-    public:
-        enum class Status
-        {
+#include <memory>
+#include <thread>
 
-        };
+#include "base/buffer.hpp"
+#include "libsrt.hpp"
 
-    public:
-        explicit SRTPush(const std::string uri);
+namespace xlab {
+class SRTPush {
+   public:
+    explicit SRTPush(const std::string ip_str, int port);
 
-        ~SRTPush();
+    ~SRTPush();
 
-    private:
-    };
-}
+   public:
+    bool success() const;
+
+    bool write(const std::shared_ptr<base::Buffer> tsbuffer);
+
+    void release();
+
+   private:
+    std::shared_ptr<LibSrt> handle_ = nullptr;
+    bool success_ = false;
+};
+}  // namespace xlab

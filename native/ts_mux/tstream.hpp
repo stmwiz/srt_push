@@ -135,7 +135,7 @@ namespace xlab
                 this->current_next_indicator = 1;
             }
 
-            virtual const Type type() const
+            const Type type() const override
             {
                 return Type::PAT;
             }
@@ -200,7 +200,7 @@ namespace xlab
                 this->section_length_lo = section_length & 0xff;
             }
 
-            virtual const Type type() const
+            const Type type() const override
             {
                 return Type::PMT;
             }
@@ -266,7 +266,7 @@ namespace xlab
                 this->PES_header_data_length = 0x05; // pts length
             }
 
-            virtual const Type type() const
+            const Type type() const override
             {
                 return Type::PES;
             }

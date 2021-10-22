@@ -4,11 +4,11 @@
 
 #include "xlog.hpp"
 
-#include <spdlog/fmt/ostr.h> // must be included
 #include <spdlog/async.h>
+#include <spdlog/fmt/ostr.h>  // must be included
+#include <spdlog/sinks/android_sink.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/daily_file_sink.h>
-#include <spdlog/sinks/android_sink.h>
 #include <spdlog/sinks/stdout_sinks.h>
 
 namespace xlab::base {
@@ -49,7 +49,7 @@ std::shared_ptr<spdlog::logger> XLog::CreateConsoleLog(std::string logger_name) 
 
 ///logger_name 不能重名
 std::shared_ptr<spdlog::logger> XLog::CreateTextLog(std::string logger_name, std::string path) {
-    spdlog::init_thread_pool(8192, 1); // 队列有 8k 个项目和 1 个支持线程。
+    spdlog::init_thread_pool(81920, 1);  // 队列有 8k 个项目和 1 个支持线程。
     auto async_file = spdlog::daily_logger_mt<spdlog::async_factory>(logger_name, path, 2, 30);
     async_file->set_pattern("[%L] [%H:%M:%S.%e] [thread %t] %v");
     async_file->set_level(LevelValue);
@@ -57,5 +57,4 @@ std::shared_ptr<spdlog::logger> XLog::CreateTextLog(std::string logger_name, std
     return async_file;
 }
 
-
-}
+}  // namespace xlab::base
