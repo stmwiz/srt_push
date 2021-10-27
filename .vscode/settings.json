@@ -1,4 +1,6 @@
 {
+    "C_Cpp.default.configurationProvider": "go2sh.cmake-integration",
+    "C_Cpp.errorSquiggles": "Enabled",
     "files.associations": {
         "array": "cpp",
         "atomic": "cpp",
@@ -9,6 +11,8 @@
         "chrono": "cpp",
         "clocale": "cpp",
         "cmath": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
         "condition_variable": "cpp",
         "csignal": "cpp",
         "cstdarg": "cpp",
@@ -24,7 +28,9 @@
         "list": "cpp",
         "map": "cpp",
         "set": "cpp",
+        "string": "cpp",
         "unordered_map": "cpp",
+        "unordered_set": "cpp",
         "vector": "cpp",
         "exception": "cpp",
         "algorithm": "cpp",
@@ -37,7 +43,6 @@
         "random": "cpp",
         "ratio": "cpp",
         "regex": "cpp",
-        "string": "cpp",
         "string_view": "cpp",
         "system_error": "cpp",
         "tuple": "cpp",
@@ -53,23 +58,17 @@
         "limits": "cpp",
         "mutex": "cpp",
         "new": "cpp",
+        "numbers": "cpp",
         "ostream": "cpp",
-        "shared_mutex": "cpp",
+        "semaphore": "cpp",
         "sstream": "cpp",
         "stdexcept": "cpp",
+        "stop_token": "cpp",
         "streambuf": "cpp",
         "thread": "cpp",
         "cinttypes": "cpp",
         "typeinfo": "cpp",
-        "variant": "cpp",
-        "unordered_set": "cpp",
         "valarray": "cpp",
-        "compare": "cpp",
-        "concepts": "cpp",
-        "numbers": "cpp",
-        "semaphore": "cpp",
-        "stop_token": "cpp"
-    },
-    "C_Cpp.errorSquiggles": "Enabled",
-    // "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
+        "variant": "cpp"
+    }
 }

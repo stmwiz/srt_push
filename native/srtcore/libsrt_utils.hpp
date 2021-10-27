@@ -93,11 +93,11 @@ static inline int libsrt_set_options_pre(SRTSOCKET fd, SRTParam *par, SRTIOFlag 
         (s->rcvbuf >= 0 && libsrt_setsockopt(fd, SRTO_RCVBUF, "SRTO_RCVBUF", &s->rcvbuf, sizeof(s->rcvbuf)) < 0) ||
         (s->lossmaxttl >= 0 && libsrt_setsockopt(fd, SRTO_LOSSMAXTTL, "SRTO_LOSSMAXTTL", &s->lossmaxttl, sizeof(s->lossmaxttl)) < 0) ||
         (s->minversion >= 0 && libsrt_setsockopt(fd, SRTO_MINVERSION, "SRTO_MINVERSION", &s->minversion, sizeof(s->minversion)) < 0) ||
-        (s->streamid && libsrt_setsockopt(fd, SRTO_STREAMID, "SRTO_STREAMID", s->streamid, strlen(s->streamid)) < 0) ||
+        (!s->streamid.empty() && libsrt_setsockopt(fd, SRTO_STREAMID, "SRTO_STREAMID", s->streamid.c_str(), s->streamid.length()) < 0) ||
 #if SRT_VERSION_VALUE >= 0x010401
-        (s->smoother && libsrt_setsockopt(fd, SRTO_CONGESTION, "SRTO_CONGESTION", s->smoother, strlen(s->smoother)) < 0) ||
+        (!s->smoother.empty() && libsrt_setsockopt(fd, SRTO_CONGESTION, "SRTO_CONGESTION", s->smoother.c_str(), s->streamid.length()) < 0) ||
 #else
-        (s->smoother && libsrt_setsockopt(fd, SRTO_SMOOTHER, "SRTO_SMOOTHER", s->smoother, strlen(s->smoother)) < 0) ||
+        (!s->smoother.empty() && libsrt_setsockopt(fd, SRTO_SMOOTHER, "SRTO_SMOOTHER", s->smoother.c_str(), s->streamid.length()) < 0) ||
 #endif
         (s->messageapi >= 0 && libsrt_setsockopt(fd, SRTO_MESSAGEAPI, "SRTO_MESSAGEAPI", &s->messageapi, sizeof(s->messageapi)) < 0) ||
         (s->payload_size >= 0 && libsrt_setsockopt(fd, SRTO_PAYLOADSIZE, "SRTO_PAYLOADSIZE", &s->payload_size, sizeof(s->payload_size)) < 0) ||

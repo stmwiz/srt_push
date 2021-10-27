@@ -1,12 +1,14 @@
 #include "srt_push.hpp"
 
-#include "srt_push/libsrt_param.hpp"
+#include "libsrt_param.hpp"
 
 namespace xlab {
 
-SRTPush::SRTPush(const std::string ip_str, int port) {
-    SRTParam param{0};
+SRTPush::SRTPush(const std::string ip_str, int port, std::string streamid) {
+    SRTParam param{};
     param.payload_size = 1316;
+    param.streamid = streamid;
+    param.tlpktdrop = 1;
     handle_ = std::make_shared<LibSrt>(param, ip_str, port, SRTIOFlag::WRITE);
     success_ = handle_->open();
 }
@@ -20,7 +22,7 @@ bool SRTPush::success() const {
 }
 
 bool SRTPush::write(const std::shared_ptr<base::Buffer> tsbuffer) {
-    if (!success()) {
+    if (!success() || handle_ == nullptr) {
         return false;
     }
 

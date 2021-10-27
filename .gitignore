@@ -3,5 +3,4 @@ build/
 libs/sources/output/
 */.gitkeep
 */.*
-*/.*/
-*/.cache/
+.cache/

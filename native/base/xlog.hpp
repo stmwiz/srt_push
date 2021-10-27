@@ -23,7 +23,7 @@ namespace xlab::base
 
         ~XLog()
         {
-            spdlog::shutdown();
+            //spdlog::shutdown();
         }
 
         static void setTextPath(std::string path)
@@ -37,13 +37,13 @@ namespace xlab::base
             return inst;
         }
 
-        static std::shared_ptr<spdlog::logger> console()
+        static const std::shared_ptr<spdlog::logger> console()
         {
             static auto console = xlab::base::XLog::get();
             return console;
         }
 
-        static std::shared_ptr<spdlog::logger> text()
+        static const std::shared_ptr<spdlog::logger> text()
         {
             static auto text = xlab::base::XLog::get(TextLoggerName, TextLoggerPath);
             return text;

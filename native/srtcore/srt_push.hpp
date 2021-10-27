@@ -11,7 +11,7 @@
 namespace xlab {
 class SRTPush {
    public:
-    explicit SRTPush(const std::string ip_str, int port);
+    explicit SRTPush(const std::string ip_str, int port,const std::string streamid);
 
     ~SRTPush();
 
